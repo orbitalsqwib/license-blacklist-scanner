@@ -1,0 +1,17 @@
+{
+	"compilerOptions": {
+		"target": "ESNext",
+		"experimentalDecorators": true,
+		"module": "ESNext",
+		"moduleResolution": "node",
+		"strict": true,
+		"noFallthroughCasesInSwitch": true,
+		"noImplicitReturns": true,
+		"outDir": "bin",
+		"sourceMap": true,
+		"pretty": true,
+		"forceConsistentCasingInFileNames": true,
+		"allowSyntheticDefaultImports": true
+	},
+	"include": ["src"]
+}
