@@ -7,6 +7,7 @@ const privateKey = env.GH_APP_PRIVATE_KEY;
 const orgUrl = env.GH_ORG_URL;
 const installationId = env.GH_ORG_INSTALLATION_ID;
 const licenseBlacklist = env.LICENSE_BLACKLIST;
+const slackWebhookUrl = env.SLACK_WEBHOOK_URL;
 
 interface PackageData {
 	name: string;
@@ -134,10 +135,7 @@ const run = async () => {
 			name: k,
 			licenses: Array.from(v, ([k, v]) => ({
 				license: k,
-				repos: v.map(
-					({ repo, version }) =>
-						`[\`\`\`${repo}\`\`\`](${orgUrl}/${repo}) @ ${version}`,
-				),
+				repos: v,
 			})),
 		}));
 
@@ -152,6 +150,13 @@ const run = async () => {
 		`${(pkgsCategory === "blacklisted" ? blacklistPkgs : noLicensePkgs)
 			.map(({ name, licenses }) =>
 				licenses
+					.map(({ license, repos }) => ({
+						license,
+						repos: repos.map(
+							({ repo, version }) =>
+								`[\`\`\`${repo}\`\`\`](${orgUrl}/${repo}) @ ${version}`,
+						),
+					}))
 					.map(({ license, repos }, idx) =>
 						idx < 1
 							? `| \`\`\`${name}\`\`\` | ${license} | ${repos} |`
@@ -162,17 +167,54 @@ const run = async () => {
 			.join("\n")}\n\n` +
 		`Please remove these dependencies.`;
 
+	const generateSlackMdFromPkgs = (pkgsCategory: "blacklisted" | "missing") =>
+		`Dependencies with ${pkgsCategory} licenses:\n\n` +
+		`${(pkgsCategory === "blacklisted" ? blacklistPkgs : noLicensePkgs)
+			.map(({ name, licenses }) =>
+				licenses
+					.map(({ license, repos }) => ({
+						license,
+						repos: repos.map(
+							({ repo, version }) =>
+								`\`${repo}\` (<${orgUrl}/${repo}|link>) @ ${version}`,
+						),
+					}))
+					.map(({ license, repos }, idx) =>
+						idx < 1 ? `*${name} - ${license}*\n - ${repos}` : `- ${repos}`,
+					)
+					.join("\n"),
+			)
+			.join("\n\n")}\n\n` +
+		`Please remove these dependencies.`;
+
 	const mdComponents = [
 		"```license-scanner``` has detected dependency licensing issues:",
 	];
+	const slackMdComponents = ["*License Blacklist Scanner Results*"];
+
 	if (blacklistPkgs.length > 0) {
 		mdComponents.push(generateMDFromPkgs("blacklisted"));
+		slackMdComponents.push(generateSlackMdFromPkgs("blacklisted"));
 	}
 	if (noLicensePkgs.length > 0) {
 		mdComponents.push(generateMDFromPkgs("missing"));
+		slackMdComponents.push(generateSlackMdFromPkgs("missing"));
 	}
 
-	console.log(mdComponents.join("\n\n"));
+	const mdProblems = mdComponents.join("\n\n");
+	const slackMdProblems = slackMdComponents.join("\n\n");
+
+	console.log(mdProblems);
+
+	if (slackWebhookUrl) {
+		const url = new URL(slackWebhookUrl);
+		fetch(url, {
+			method: "POST",
+			body: JSON.stringify({
+				text: slackMdProblems,
+			}),
+		});
+	}
 };
 
 run();

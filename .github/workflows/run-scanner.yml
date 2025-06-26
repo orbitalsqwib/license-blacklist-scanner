@@ -45,4 +45,5 @@ jobs:
           GH_APP_PRIVATE_KEY: ${{ secrets.GH_APP_PRIVATE_KEY }}
           GH_ORG_INSTALLATION_ID: ${{ secrets.GH_ORG_INSTALLATION_ID }}
           GH_ORG_URL: ${{ vars.GH_ORG_URL }}
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
             
