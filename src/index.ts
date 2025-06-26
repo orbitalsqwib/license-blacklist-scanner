@@ -2,10 +2,10 @@ import { env } from "node:process";
 import { App } from "octokit";
 import packageJson from "package-json";
 
-const appId = env.GITHUB_APP_ID;
-const privateKey = env.GITHUB_PRIVATE_KEY;
-const orgUrl = env.GITHUB_ORG_URL;
-const installationId = env.GITHUB_ORG_INSTALLATION_ID;
+const appId = env.GH_APP_ID;
+const privateKey = env.GH_APP_PRIVATE_KEY;
+const orgUrl = env.GH_ORG_URL;
+const installationId = env.GH_ORG_INSTALLATION_ID;
 const licenseBlacklist = env.LICENSE_BLACKLIST;
 
 interface PackageData {
